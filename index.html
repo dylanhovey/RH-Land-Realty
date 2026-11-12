@@ -543,18 +543,21 @@
       </div>
       <div>
         <form class="form reveal" id="offerForm">
+          <input type="hidden" name="access_key" value="98ae3584-9299-4708-82d9-4f76922f83f4">
+          <input type="hidden" name="subject" value="New Cash Offer Request &mdash; RH Land &amp; Realty">
+          <input type="checkbox" name="botcheck" id="botcheck" style="display:none" tabindex="-1" autocomplete="off">
           <div class="field-row">
-            <div class="field"><label for="fname">Full name</label><input id="fname" type="text" placeholder="Jordan Rivers" required></div>
-            <div class="field"><label for="fphone">Phone</label><input id="fphone" type="tel" placeholder="(555) 555-5555" required></div>
+            <div class="field"><label for="fname">Full name</label><input id="fname" name="name" type="text" placeholder="Jordan Rivers" required></div>
+            <div class="field"><label for="fphone">Phone</label><input id="fphone" name="phone" type="tel" placeholder="(555) 555-5555" required></div>
           </div>
-          <div class="field"><label for="femail">Email</label><input id="femail" type="email" placeholder="you@email.com" required></div>
+          <div class="field"><label for="femail">Email</label><input id="femail" name="email" type="email" placeholder="you@email.com" required></div>
           <div class="field-row">
-            <div class="field"><label for="fcounty">County &amp; state</label><input id="fcounty" type="text" placeholder="Maury Co., TN"></div>
-            <div class="field"><label for="facre">Approx. acreage</label><input id="facre" type="text" placeholder="6.2"></div>
+            <div class="field"><label for="fcounty">County &amp; state</label><input id="fcounty" name="county_state" type="text" placeholder="Maury Co., TN"></div>
+            <div class="field"><label for="facre">Approx. acreage</label><input id="facre" name="approx_acreage" type="text" placeholder="6.2"></div>
           </div>
           <div class="field">
             <label for="fsituation">Situation</label>
-            <select id="fsituation">
+            <select id="fsituation" name="situation">
               <option>Inherited the land</option>
               <option>Land is landlocked / no access</option>
               <option>Just don't use it anymore</option>
@@ -563,9 +566,10 @@
           </div>
           <div class="field" id="fotherWrap" hidden>
             <label for="fother">Tell us more about your situation</label>
-            <textarea id="fother" rows="3" placeholder="Briefly describe your situation..."></textarea>
+            <textarea id="fother" name="situation_details" rows="3" placeholder="Briefly describe your situation..."></textarea>
           </div>
-          <button type="submit" class="btn btn-primary" style="margin-top:0.5rem;">Get My Free Cash Offer</button>
+          <button type="submit" class="btn btn-primary" id="offerSubmitBtn" style="margin-top:0.5rem;">Get My Free Cash Offer</button>
+          <p id="formError" style="display:none;color:var(--danger);font-size:0.875rem;margin:0.25rem 0 0;">Something went wrong sending your request &mdash; please try again, or email us directly.</p>
         </form>
         <div class="success-msg" id="successMsg">Thanks &mdash; your request is in. Someone from RH Land &amp; Realty will reach out the same day with next steps.</div>
       </div>
@@ -675,13 +679,37 @@
     }
   });
 
-  // form submit (front-end only, no backend)
+  // form submit — delivers to RH Land & Realty's inbox via Web3Forms (no backend server needed)
   var form = document.getElementById('offerForm');
   var success = document.getElementById('successMsg');
+  var submitBtn = document.getElementById('offerSubmitBtn');
+  var formError = document.getElementById('formError');
   form.addEventListener('submit', function(e){
     e.preventDefault();
-    form.classList.add('hide');
-    success.classList.add('show');
+    formError.style.display = 'none';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+
+    var payload = Object.fromEntries(new FormData(form));
+
+    fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function(response){
+      if(response.ok){
+        form.classList.add('hide');
+        success.classList.add('show');
+      } else {
+        formError.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Get My Free Cash Offer';
+      }
+    }).catch(function(){
+      formError.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Get My Free Cash Offer';
+    });
   });
 
   // scroll reveal
